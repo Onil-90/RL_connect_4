@@ -3,15 +3,17 @@
 # Available methods so far:
 #
 # is_full(self)
+# who_is_playing(self)
 # get_last_occupied_row_in_column(self, column)
 # print(self)
 # is_winning(self, last_move_column)
-# 
+# actions_available(self)
+# move
 
 class Board:
     def __init__(self, matrix, colorPlayer1 = 1, colorPlayer2 = -1, empty = 0):
         self.matrix = matrix
-        self.colorPlayer1 = colorPlayer2
+        self.colorPlayer1 = colorPlayer1
         self.colorPlayer2 = colorPlayer2
         self.empty = empty
 
@@ -22,6 +24,19 @@ class Board:
             return True
         else:
             return False
+
+    def who_is_playing(self):
+        # This method returns 1 if Player 1 has to move, and 2 if Player 2 has to move
+        pl1_count = 0
+        pl2_count = 0
+        import numpy as np
+        for row in range(np.shape(self.matrix)[0]):
+            for column in range(np.shape(self.matrix)[1]):
+                if self.matrix[row, column] == self.colorPlayer1:
+                    pl1_count = pl1_count + 1
+                if self.matrix[row, column] == self.colorPlayer2:
+                    pl2_count = pl2_count + 1
+        return pl1_count-pl2_count+1
 
     def get_last_occupied_row_in_column(self, column):
         # return last occupied row in a given column
@@ -143,3 +158,14 @@ class Board:
             if row > 0:
                 actions_available.append(column)
         return actions_available
+
+    def move(self, column):
+        # This metod takes as argument only a column and makes that move.
+        # !!! WARNING !!! It is not very efficient because it computes who is playing 
+        #     instead of taking the who is the next player as imput
+        if (self.is_full() == False) and (column in self.actions_available()):
+            row = self.get_last_occupied_row_in_column(column)
+            if self.who_is_playing() == 1:
+                self.matrix[row -1, column] = self.colorPlayer1
+            else:
+                self.matrix[row -1, column] = self.colorPlayer2
