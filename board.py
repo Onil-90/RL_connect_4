@@ -1,6 +1,15 @@
 # Board class
 #
-# Available methods so far:
+# ATTRIBUTES:
+# 
+# matrix
+# playerToPlay
+# lastMove
+# colorPlayer1
+# colorPlayer2
+# empty
+#
+# METODS:
 #
 # is_full(self)
 # who_is_playing(self)
@@ -11,11 +20,12 @@
 # move
 
 class Board:
-    def __init__(self, matrix, colorPlayer1 = 1, colorPlayer2 = -1, empty = 0):
+    def __init__(self, matrix, colorPlayer1 = 1, colorPlayer2 = -1, empty = 0, playerToPlay = None, lastMove = None):
         self.matrix = matrix
         self.colorPlayer1 = colorPlayer1
         self.colorPlayer2 = colorPlayer2
         self.empty = empty
+        self.playerToPlay = self.who_is_playing()
 
     def is_full(self):
         # check whether the board is full
@@ -27,6 +37,7 @@ class Board:
 
     def who_is_playing(self):
         # This method returns 1 if Player 1 has to move, and 2 if Player 2 has to move
+        # however it shouldn't be need
         pl1_count = 0
         pl2_count = 0
         import numpy as np
@@ -51,98 +62,98 @@ class Board:
         # print the board
         print(self.matrix)
 
-    def is_winning(self, last_move_column):
-        # note this function expect that last_move_column is a legal value 
-        last_move_row = self.get_last_occupied_row_in_column(last_move_column)
-        cell_value = self.matrix[last_move_row][last_move_column]
+    def is_winning(self):
+        # note this method expect that lastMove is a legal value 
+        lastMoveRow = self.get_last_occupied_row_in_column(self.lastMove)
+        cellValue = self.matrix[lastMoveRow][self.lastMove]
         # first we check if below the last move there are three gettoni of the same color
         # (we do it only if we are above the third row)
-        if last_move_row < len(self.matrix) - 3:
-            if self.matrix[last_move_row + 1][last_move_column] == cell_value:
+        if lastMoveRow < len(self.matrix) - 3:
+            if self.matrix[lastMoveRow + 1][self.lastMove] == cellValue:
                 # if the sum of the following three values is tree then they are all of the same color
-                tmp_sum = sum(self.matrix[last_move_row + 1:last_move_row + 4, last_move_column])
-                if abs(tmp_sum) == 3:
+                tmpSum = sum(self.matrix[lastMoveRow + 1:lastMoveRow + 4, self.lastMove])
+                if abs(tmpSum) == 3:
                     return True
         # second we check the positive diagonal
         counter = 0
-        current_row = last_move_row
-        current_column = last_move_column
+        currentRow = lastMoveRow
+        currentColumn = self.lastMove
 
 
-        def next_cell_on_the_diagonal(matrix, current_row, current_column, direction):
+        def next_cell_on_the_diagonal(matrix, currentRow, currentColumn, direction):
         # This is an auxiliary function that is used only in this method
             if direction == 1:
                 # check we are in the boundaries
-                if current_row == 0 or current_column == len(matrix[0]) - 1:
+                if currentRow == 0 or currentColumn == len(matrix[0]) - 1:
                     # we return a value that in not in the matrix because we are outside the boundary
                     return 1.5, None, None
                 else:
-                    return matrix[current_row - 1][current_column + 1], current_row - 1, current_column + 1
+                    return matrix[currentRow - 1][currentColumn + 1], currentRow - 1, currentColumn + 1
             elif direction == -1:
-                if current_row == 0 or current_column == 0:
+                if currentRow == 0 or currentColumn == 0:
                     # we return a value that in not in the matrix because we are outside the boundary
                     return 1.5, None, None
                 else:
-                    return matrix[current_row - 1][current_column - 1], current_row - 1, current_column - 1
+                    return matrix[currentRow - 1][currentColumn - 1], currentRow - 1, currentColumn - 1
 
-        def prev_cell_on_the_diagonal(matrix, current_row, current_column, direction):
+        def prev_cell_on_the_diagonal(matrix, currentRow, currentColumn, direction):
             if direction == 1:
                # check we are in the boundaries
-                if current_row == len(matrix) - 1 or current_column == 0:
+                if currentRow == len(matrix) - 1 or currentColumn == 0:
                     # we return a value that in not in the matrix because we are outside the boundary
                     return 1.5, None, None
                 else:
-                    return matrix[current_row + 1][current_column - 1], current_row + 1, current_column - 1
+                    return matrix[currentRow + 1][currentColumn - 1], currentRow + 1, currentColumn - 1
             elif direction == -1:
-                if current_row == len(matrix) - 1 or current_column == len(matrix[0]) - 1:
+                if currentRow == len(matrix) - 1 or currentColumn == len(matrix[0]) - 1:
                     # we return a value that in not in the matrix because we are outside the boundary
                     return 1.5, None, None
                 else:
-                    return matrix[current_row + 1][current_column + 1], current_row + 1, current_column + 1
+                    return matrix[currentRow + 1][currentColumn + 1], currentRow + 1, currentColumn + 1
                 
         # checking the following items on the diagonal
-        while next_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=1)[0] == cell_value:
+        while next_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=1)[0] == cellValue:
             counter = counter + 1
-            waste, current_row, current_column = next_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=1)
+            waste, currentRow, currentColumn = next_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=1)
         # checking the preceding items on the diagonal
-        current_row = last_move_row
-        current_column = last_move_column
-        while prev_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=1)[0] == cell_value:
+        currentRow = lastMoveRow
+        currentColumn = self.lastMove
+        while prev_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=1)[0] == cellValue:
             counter = counter + 1
-            waste, current_row, current_column = prev_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=1)
+            waste, currentRow, currentColumn = prev_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=1)
         if counter >= 3:
             return True
         # third we check the negative diagonal
         counter = 0
-        current_row = last_move_row
-        current_column = last_move_column
+        currentRow = lastMoveRow
+        currentColumn = self.lastMove
         # checking the following items on the diagonal
-        while next_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=-1)[0] == cell_value:
+        while next_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=-1)[0] == cellValue:
             counter = counter + 1
-            waste, current_row, current_column = next_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=-1)
+            waste, currentRow, currentColumn = next_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=-1)
         # checking the preceding items on the diagonal
-        current_row = last_move_row
-        current_column = last_move_column
-        while prev_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=-1)[0] == cell_value:
+        currentRow = lastMoveRow
+        currentColumn = self.lastMove
+        while prev_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=-1)[0] == cellValue:
             counter = counter + 1
-            waste, current_row, current_column = prev_cell_on_the_diagonal(self.matrix, current_row, current_column, direction=-1)
+            waste, currentRow, currentColumn = prev_cell_on_the_diagonal(self.matrix, currentRow, currentColumn, direction=-1)
         if counter >= 3:
             return True
         # fourth we check on the same row
         counter = 0
-        current_column = last_move_column - 1
+        currentColumn = self.lastMove - 1
         # check on the left
-        while current_column >= 0:
-            if self.matrix[last_move_row][current_column] == cell_value:
-                current_column = current_column - 1
+        while currentColumn >= 0:
+            if self.matrix[lastMoveRow][currentColumn] == cellValue:
+                currentColumn = currentColumn - 1
                 counter = counter + 1
             else:
                 break
         # check on the right
-        current_column = last_move_column + 1
-        while current_column < len(self.matrix[0]):
-            if self.matrix[last_move_row][current_column] == cell_value:
-                current_column = current_column + 1
+        currentColumn = self.lastMove + 1
+        while currentColumn < len(self.matrix[0]):
+            if self.matrix[lastMoveRow][currentColumn] == cellValue:
+                currentColumn = currentColumn + 1
                 counter = counter + 1
             else:
                 break
@@ -161,11 +172,14 @@ class Board:
 
     def move(self, column):
         # This metod takes as argument only a column and makes that move.
-        # !!! WARNING !!! It is not very efficient because it computes who is playing 
-        #     instead of taking the who is the next player as imput
         if (self.is_full() == False) and (column in self.actions_available()):
             row = self.get_last_occupied_row_in_column(column)
-            if self.who_is_playing() == 1:
+            if self.playerToPlay == 1:
                 self.matrix[row -1, column] = self.colorPlayer1
             else:
                 self.matrix[row -1, column] = self.colorPlayer2
+            # update the lastMove attribute
+            self.lastMove = column
+            # update the playerToPlay attribute
+            self.playerToPlay = 3 - self.playerToPlay
+
