@@ -11,9 +11,10 @@ import tensorflow as tf
 from tensorflow.keras import layers, losses
 import tensorflow.keras.backend as kb
 import copy
+import matplotlib.pyplot as plt
 
 class NN:
-    def __init__(self, name, nRows, nColumns, nEpochs=3, learningRate=0.01, gamma = 0.95, freezeSteps = 50):
+    def __init__(self, name, nRows, nColumns, nEpochs=3, learningRate=0.001, gamma = 0.95, freezeSteps = 20):
         self.name = name
         self.nRows = nRows
         self.nColumns = nColumns
@@ -34,11 +35,11 @@ class NN:
                 layers.Dropout(0.1),
                 layers.Dense(nColumns, activation='sigmoid')  # The number of actions is equal to the number of columns
             ])
-            self.neuralNetwork.compile(optimizer='SGD',
-                loss='mse',
-                metrics=[tf.keras.metrics.MeanSquaredError()])
-            # save the model
-            self.neuralNetwork.save('NN_parameters/NN_' + self.name)
+        self.neuralNetwork.compile(optimizer='SGD',
+            loss='mse',
+            metrics=[tf.keras.metrics.MeanSquaredError()])
+        # save the model
+        self.neuralNetwork.save('NN_parameters/NN_' + self.name)
         # create a frozen copy of the NN 
         # this a copy of the keras model self.neuralNetwork but its weights will be
         # updated every self.freezeSteps of training 
@@ -109,7 +110,7 @@ class NN:
         # print history
         # update frozen NN
         self.updateFrozen()
-        return
+        return history.history['loss'][-1]
 
 
     def save(self):

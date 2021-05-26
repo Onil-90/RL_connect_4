@@ -14,15 +14,17 @@
 import numpy as np
 import random 
 import copy
+import matplotlib.pyplot as plt 
 
 from board import *
 
 class AI:
-    def __init__(self, whichPlayer, NN, epsilon, memorySize):
+    def __init__(self, whichPlayer, NN, epsilon, memorySize, batchSize = 5):
         self.whichPlayer = whichPlayer
         self.NN = NN
         self.epsilon = epsilon
         self.memorySize = memorySize
+        self.batchSize = batchSize
         self.memory = []
         self.reward = {
             "win":10,
@@ -117,9 +119,9 @@ class AI:
             self.memory.append(experience)
             
 
-    def get_batch(self, batchSize = 10):
-        if batchSize <= len(self.memory):
-            batch = random.sample(self.memory, batchSize)
+    def get_batch(self):
+        if self.batchSize <= len(self.memory):
+            batch = random.sample(self.memory, self.batchSize)
         else:
         	# if the batchSize is bigger then the memory length then something is wrong
             print("\nERROR!!! Trying to get a batch from memory, but the batch size is bigger than the memory length.\n")
@@ -184,7 +186,8 @@ class AI:
         	# initialize the board
             board = empty_board(self.NN.nRows, self.NN.nColumns)
             board.reset(self, environment)
-            for turns in range(nTurns):
+            loss = []
+            for turn in range(nTurns):
             	# we play one turn and we collect the experience (S,a,r,S_prime)
                 experience = self.S_a_r_S_prime(board, environment)
                 # update the memory
@@ -196,12 +199,21 @@ class AI:
                 if useLastExperience == True:
                     batch.append(experience)
                 # use it for training
-                self.NN.train_NN(batch)
+                loss.append(self.NN.train_NN(batch))
+                #------------------------------------------------ make color change according to player!!!!
+                plt.title('player ' + str(self.whichPlayer) + ' is training')
+                plt.axis([0, nTurns, 0, 10])
+                plt.plot(range(turn+1), loss, color = 'blue')
+                plt.pause(0.05)
+            plt.close()
             # let's save the trained model
             self.NN.save()
             # if agent can beat the environment, exit the loop!
             if self.test(environment) == 100:
                 isAgentStronger = True
+        plt.show()
+        
+    
         # restore the old epsilon of environment
         environment.epsilon = epsilonEnvironment
 
